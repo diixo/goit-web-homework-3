@@ -5,12 +5,10 @@ import shutil
 import sys
 import uuid
 from pathlib import Path
-import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import logging
-from random import randint
-from time import sleep
 
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+executor = ThreadPoolExecutor(max_workers=2)
 
 ##########################################################
 img_f = {'.jpeg', '.png', '.jpg', '.svg', ".bmp", ".ico"}
