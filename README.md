@@ -1,1 +1,3 @@
-# goit-web-homework-3
+## goit-web-homework-3
+
+### Cleaner with multithreading
