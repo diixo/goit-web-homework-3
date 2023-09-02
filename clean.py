@@ -73,12 +73,12 @@ def parse_folder(root, ipath = None):
 
             targetFile = Path(root + "/" + cat + "/" + newName + pathFile.suffix)
             if not targetFile.exists():
-                pathFile.replace(targetFile)
-                #shutil.copyfile(str(pathFile.absolute()), str(targetFile.absolute()))
+                #pathFile.replace(targetFile)
+                shutil.copyfile(str(pathFile.absolute()), str(targetFile.absolute()))
             else:
                 targetFile = targetFile.with_name(f"{targetFile.stem}-{uuid.uuid4()}{targetFile.suffix}")
-                pathFile.replace(targetFile)
-                #shutil.copyfile(str(pathFile.absolute()), str(targetFile.absolute()))
+                #pathFile.replace(targetFile)
+                shutil.copyfile(str(pathFile.absolute()), str(targetFile.absolute()))
 
             if cat == "archives":
                 shutil.unpack_archive(str(targetFile.absolute()), root + "/" + cat + "/" + targetFile.stem)
@@ -138,7 +138,7 @@ def main():
     path = Path(root)
 
     if not path.exists():
-        return f"Folder with path {root} dos`n exists."
+        return f"Folder with path {root} doesn`t exists."
 
     parse_folder(root)
     printStatistic(root)
