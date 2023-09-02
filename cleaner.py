@@ -1,11 +1,16 @@
 # from task04_path
-
 import re
 import os
 import shutil
 import sys
 import uuid
 from pathlib import Path
+import concurrent.futures
+import logging
+from random import randint
+from time import sleep
+
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
 ##########################################################
 img_f = {'.jpeg', '.png', '.jpg', '.svg', ".bmp", ".ico"}
@@ -38,7 +43,18 @@ def normalize(name):
     rename = re.sub(r'[^a-zA-Z0-9 -]', "_", rename)
     return rename
 ###########################################################
+def job_copy_file(file_src: str, file_dest: str):
+    #pathFile.replace(targetFile)
+    #shutil.copyfile(file_src, file_dest)
+    logging.debug(f"COPY: from# {file_src} to# {file_dest}")
+
+def job_unpack_archive(file_src: str, file_dest: str):
+    #shutil.unpack_archive(file_src, file_dest)
+    logging.debug(f"UNPACK: from# {file_src} to# {file_dest}")
+
+###########################################################
 def parse_folder(root, ipath = None):
+    global executor
     if not Path(root).exists(): return False
 
     # check if current directory is root.
@@ -53,9 +69,9 @@ def parse_folder(root, ipath = None):
             if ipath == None:
                 if i.name.lower() in CATEGORIES.keys():
                     continue
-            else:
-                folders.append(i.name)
-                empties = False
+            
+            folders.append(i.name)
+            empties = False
         
         elif i.is_file():
             pathFile = Path(absPath + i.name)
@@ -72,24 +88,25 @@ def parse_folder(root, ipath = None):
                 targetDir.mkdir()
 
             targetFile = Path(root + "/" + cat + "/" + newName + pathFile.suffix)
-            if not targetFile.exists():
-                #pathFile.replace(targetFile)
-                shutil.copyfile(str(pathFile.absolute()), str(targetFile.absolute()))
-            else:
+            if targetFile.exists():
                 targetFile = targetFile.with_name(f"{targetFile.stem}-{uuid.uuid4()}{targetFile.suffix}")
-                #pathFile.replace(targetFile)
-                shutil.copyfile(str(pathFile.absolute()), str(targetFile.absolute()))
+
+            #move-copy file to destination category-directory in separated Thread:
+            #pathFile.replace(targetFile)
+            executor.submit(job_copy_file, str(pathFile.absolute()), str(targetFile.absolute()))
 
             if cat == "archives":
-                shutil.unpack_archive(str(targetFile.absolute()), root + "/" + cat + "/" + targetFile.stem)
-                        
+                #unpack file in separated Thread
+                executor.submit(job_unpack_archive, str(targetFile.absolute()), root + "/" + cat + "/" + targetFile.stem)
+
     #*********************************
     # remove empty directories
     for i, dirName in enumerate(folders):
         if parse_folder(root, absPath + dirName) == True:
             # remove sub-directory if empty is OK
             rmDir = Path(absPath + dirName)
-            rmDir.rmdir()
+            # TODO:
+            #rmDir.rmdir()
 
     empties = True
     for iter in path.iterdir():
@@ -124,14 +141,16 @@ def printStatistic(root: str):
             
             # category [others] has empty extentions dictionary
             if len(CATEGORIES[cat]) > 0:    # check, if category is any category, except [others]
-                print(f"[*{cat}*].extentions: {ext}")
+                if len(ext)>0: print(f"[*{cat}*].extentions: {ext}")
             else:                           # [others] category
-                print(f"[*{cat}*].extentions: {uext}")
+                if len(uext)>0: print(f"[*{cat}*].extentions: {uext}")
 
-    print("----------------------\n", cat_amount)
+    if cat_amount: print("----------------------\n", cat_amount)
 
 ###############################################################
 def main():
+    global executor
+
     root = "."
     if len(sys.argv) > 1:
         root = sys.argv[1]
@@ -145,4 +164,5 @@ def main():
     return "Ok"
 ###############################################################
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.DEBUG, format='%(threadName)s %(message)s')
     print(main())
