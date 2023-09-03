@@ -6,7 +6,7 @@ import sys
 import uuid
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from threading import RLock
+from threading import RLock, Thread
 import logging
 
 executor = ThreadPoolExecutor(max_workers=2)
@@ -16,7 +16,7 @@ category_exts  = dict()
 ##########################################################
 img_f = {'.jpeg', '.png', '.jpg', '.svg', ".bmp", ".ico"}
 mov_f = {'.avi', '.mp4', '.mov', '.mkv', ".webm", ".wmv", ".flv"}
-doc_f = {'.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx', ".ini", ".cmd", ".ppt", ".xml", ".msg", ".cpp", ".hpp", ".py", ".md"}
+doc_f = {'.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx', ".ini", ".cmd", ".ppt", ".xml", ".msg", ".cpp", ".hpp", ".py", ".md", ".csv"}
 mus_f = {'.mp3', '.ogg', '.wav', '.amr', ".aiff"}
 arch_f = {'.zip', '.tar'}
 
@@ -47,16 +47,16 @@ def normalize(name):
 def moveStatistic():
     global category_files, category_exts
 
-    if len(category_files.items()) > 0:
-        print(f"{'='*21} #Files {'='*21}")
-        for cat, amount in category_files.items():
-            print(f"[{cat}]: {amount}")
-        print("="*50)
-
     if len(category_exts.items()) > 0:
         print(f"{'='*18} #Extentions {'='*19}")
         for cat, exts in category_exts.items():
             print(f"[{cat}.*]: {exts}")
+        print("="*50)
+
+    if len(category_files.items()) > 0:
+        print(f"{'='*21} #Files {'='*21}")
+        for cat, amount in category_files.items():
+            print(f"[{cat}]: {amount}")
         print("="*50)
 
 def job_copy_file(file_src: str, file_dest: str, category: str, suffix: str):
@@ -79,7 +79,7 @@ def job_unpack_archive(file_src: str, file_dest: str):
     logging.debug(f"UNPACK: from# {file_src} to# {file_dest}")
 
 ###########################################################
-def parse_folder(root, ipath = None):
+def parse_directory(root, ipath = None):
     global executor
     if not Path(root).exists(): return False
 
@@ -95,8 +95,8 @@ def parse_folder(root, ipath = None):
             if ipath == None:
                 if i.name.lower() in CATEGORIES.keys():
                     continue
-            
-            folders.append(i.name)
+
+            parse_directory(root, absPath + i.name)
         
         elif i.is_file():
             pathFile = Path(absPath + i.name)
@@ -117,30 +117,38 @@ def parse_folder(root, ipath = None):
                 targetFile = targetFile.with_name(f"{targetFile.stem}-{uuid.uuid4()}{suffix}")
 
             #move-copy file to destination category-directory in separated Thread:
-            #pathFile.replace(targetFile)
             executor.submit(job_copy_file, str(pathFile.absolute()), str(targetFile.absolute()), cat, suffix)
 
             if cat == "archives":
                 #unpack file in separated Thread
                 executor.submit(job_unpack_archive, str(targetFile.absolute()), root + "/" + cat + "/" + targetFile.stem)
 
+#############################################################
+def rm_directory(root, ipath = None):
+    if not Path(root).exists(): return False
+
+    # check if current directory is root.
+    absPath = root if ipath == None else ipath
+
+    folders = []
+    path = Path(absPath)
+    absPath += "/"
+
+    for i in path.iterdir():
+        if i.is_dir():
+            if ipath == None:
+                if i.name.lower() in CATEGORIES.keys():
+                    continue
+            
+            folders.append(i.name)
     #*********************************
-    # remove empty directories
     for i, dirName in enumerate(folders):
-        if parse_folder(root, absPath + dirName) == True:
-            # remove sub-directory if empty is OK
+        if rm_directory(root, absPath + dirName) == True:
+            # remove sub-directory if is empty
             rmDir = Path(absPath + dirName)
-            # TODO:
-            #rmDir.rmdir()
+            logging.debug(f"RMDIR: {rmDir.absolute()}")
 
-    empties = True
-    for iter in path.iterdir():
-        if iter.is_file() or iter.is_dir():
-            # return empty-flag that allow to delete
-            empties = False
-            break
-
-    return empties
+    return len(folders) == 0
 
 #############################################################
 def allStatistic(root: str):
@@ -184,11 +192,17 @@ def main():
     if not path.exists():
         return f"Folder with path {root} doesn`t exists."
 
-    parse_folder(root)
+    parse_directory(root)
 
     # stop with blocking current thread before shutdown, but waits for all threads will be finished
     executor.shutdown(wait=True)
 
+    # start to remove all sub-directories in separated thread
+    thread = Thread(target=rm_directory, args=(root,))
+    thread.start()
+    thread.join()
+
+    # выводим статистику перемещения всех файлов по категориям, которые были перемещены последним вызовом приложения
     moveStatistic()
 
     return "Ok"
