@@ -6,14 +6,17 @@ import sys
 import uuid
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
+from threading import RLock
 import logging
 
 executor = ThreadPoolExecutor(max_workers=2)
+category_files = dict()
+category_exts  = dict()
 
 ##########################################################
 img_f = {'.jpeg', '.png', '.jpg', '.svg', ".bmp", ".ico"}
 mov_f = {'.avi', '.mp4', '.mov', '.mkv', ".webm", ".wmv", ".flv"}
-doc_f = {'.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx', ".ini", ".cmd", ".ppt", ".xml", ".msg", ".cpp", ".hpp", ".py"}
+doc_f = {'.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx', ".ini", ".cmd", ".ppt", ".xml", ".msg", ".cpp", ".hpp", ".py", ".md"}
 mus_f = {'.mp3', '.ogg', '.wav', '.amr', ".aiff"}
 arch_f = {'.zip', '.tar'}
 
@@ -41,9 +44,34 @@ def normalize(name):
     rename = re.sub(r'[^a-zA-Z0-9 -]', "_", rename)
     return rename
 ###########################################################
+def moveStatistic():
+    global category_files, category_exts
+
+    if len(category_files.items()) > 0:
+        print(f"{'='*21} #Files {'='*21}")
+        for cat, amount in category_files.items():
+            print(f"[{cat}]: {amount}")
+        print("="*50)
+
+    if len(category_exts.items()) > 0:
+        print(f"{'='*18} #Extentions {'='*19}")
+        for cat, exts in category_exts.items():
+            print(f"[{cat}.*]: {exts}")
+        print("="*50)
+
 def job_copy_file(file_src: str, file_dest: str, category: str, suffix: str):
     #pathFile.replace(targetFile)
     #shutil.copyfile(file_src, file_dest)
+
+    locker = RLock()
+    #locker.acquire()
+    with locker:
+        category_files[category] = category_files.get(category, 0) + 1
+        exts = category_exts.get(category, set())
+        exts.add(suffix)
+        category_exts[category] = exts
+    #locker.release()
+
     logging.debug(f"COPY: from# {file_src} to# {file_dest}")
 
 def job_unpack_archive(file_src: str, file_dest: str):
@@ -116,9 +144,9 @@ def parse_folder(root, ipath = None):
     return empties
 
 #############################################################
-def printStatistic(root: str):
+def allStatistic(root: str):
     global CATEGORIES
-    cat_amount = dict()
+    cat_files_all = dict()
 
     # try to traverse each directory-category:
     for cat, exts in CATEGORIES.items():
@@ -130,7 +158,7 @@ def printStatistic(root: str):
             for item in dirCat.iterdir():
                 if(item.is_file()):
                     print(f"[{cat}]: {item.name}")
-                    cat_amount[cat] = cat_amount.get(cat, 0) + 1
+                    cat_files_all[cat] = cat_files_all.get(cat, 0) + 1
 
                     if item.suffix in CATEGORIES[cat]:
                         ext.add(item.suffix)
@@ -143,7 +171,7 @@ def printStatistic(root: str):
             else:                           # [others] category
                 if len(uext)>0: print(f"[*{cat}*].extentions: {uext}")
 
-    if cat_amount: print("----------------------\n", cat_amount)
+    if cat_files_all: print("----------------------\n", cat_files_all)
 
 ###############################################################
 def main():
@@ -162,7 +190,7 @@ def main():
     # stop with blocking current thread before shutdown, but waits for all threads will be finished
     executor.shutdown(wait=True)
 
-    printStatistic(root)
+    moveStatistic()
 
     return "Ok"
 ###############################################################
