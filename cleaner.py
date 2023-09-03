@@ -129,6 +129,33 @@ def parse_directory(root, ipath = None):
         parse_directory(root, absPath + dirName)
 
 #############################################################
+def rm_directory(root, ipath = None):
+    if not Path(root).exists(): return False
+
+    # check if current directory is root.
+    absPath = root if ipath == None else ipath
+
+    folders = []
+    path = Path(absPath)
+    absPath += "/"
+
+    for i in path.iterdir():
+        if i.is_dir():
+            if ipath == None:
+                if i.name.lower() in CATEGORIES.keys():
+                    continue
+            
+            folders.append(i.name)
+    #*********************************
+    for i, dirName in enumerate(folders):
+        if rm_directory(root, absPath + dirName) == True:
+            # remove sub-directory if empty is OK
+            rmDir = Path(absPath + dirName)
+            logging.debug(f"RMDIR: {rmDir.absolute()}")
+
+    return len(folders) == 0
+
+#############################################################
 def allStatistic(root: str):
     global CATEGORIES
     cat_files_all = dict()
@@ -176,6 +203,7 @@ def main():
     executor.shutdown(wait=True)
 
     moveStatistic()
+    rm_directory(root)
 
     return "Ok"
 ###############################################################
