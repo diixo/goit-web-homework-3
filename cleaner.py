@@ -16,7 +16,7 @@ category_exts  = dict()
 ##########################################################
 img_f = {'.jpeg', '.png', '.jpg', '.svg', ".bmp", ".ico"}
 mov_f = {'.avi', '.mp4', '.mov', '.mkv', ".webm", ".wmv", ".flv"}
-doc_f = {'.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx', ".ini", ".cmd", ".ppt", ".xml", ".msg", ".cpp", ".hpp", ".py", ".md"}
+doc_f = {'.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx', ".ini", ".cmd", ".ppt", ".xml", ".msg", ".cpp", ".hpp", ".py", ".md", ".csv"}
 mus_f = {'.mp3', '.ogg', '.wav', '.amr', ".aiff"}
 arch_f = {'.zip', '.tar'}
 
@@ -79,7 +79,7 @@ def job_unpack_archive(file_src: str, file_dest: str):
     logging.debug(f"UNPACK: from# {file_src} to# {file_dest}")
 
 ###########################################################
-def parse_folder(root, ipath = None):
+def parse_directory(root, ipath = None):
     global executor
     if not Path(root).exists(): return False
 
@@ -125,22 +125,8 @@ def parse_folder(root, ipath = None):
                 executor.submit(job_unpack_archive, str(targetFile.absolute()), root + "/" + cat + "/" + targetFile.stem)
 
     #*********************************
-    # remove empty directories
     for i, dirName in enumerate(folders):
-        if parse_folder(root, absPath + dirName) == True:
-            # remove sub-directory if empty is OK
-            rmDir = Path(absPath + dirName)
-            # TODO:
-            #rmDir.rmdir()
-
-    empties = True
-    for iter in path.iterdir():
-        if iter.is_file() or iter.is_dir():
-            # return empty-flag that allow to delete
-            empties = False
-            break
-
-    return empties
+        parse_directory(root, absPath + dirName)
 
 #############################################################
 def allStatistic(root: str):
@@ -184,7 +170,7 @@ def main():
     if not path.exists():
         return f"Folder with path {root} doesn`t exists."
 
-    parse_folder(root)
+    parse_directory(root)
 
     # stop with blocking current thread before shutdown, but waits for all threads will be finished
     executor.shutdown(wait=True)
