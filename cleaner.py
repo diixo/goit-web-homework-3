@@ -47,16 +47,16 @@ def normalize(name):
 def moveStatistic():
     global category_files, category_exts
 
-    if len(category_files.items()) > 0:
-        print(f"{'='*21} #Files {'='*21}")
-        for cat, amount in category_files.items():
-            print(f"[{cat}]: {amount}")
-        print("="*50)
-
     if len(category_exts.items()) > 0:
         print(f"{'='*18} #Extentions {'='*19}")
         for cat, exts in category_exts.items():
             print(f"[{cat}.*]: {exts}")
+        print("="*50)
+
+    if len(category_files.items()) > 0:
+        print(f"{'='*21} #Files {'='*21}")
+        for cat, amount in category_files.items():
+            print(f"[{cat}]: {amount}")
         print("="*50)
 
 def job_copy_file(file_src: str, file_dest: str, category: str, suffix: str):
@@ -95,7 +95,7 @@ def parse_directory(root, ipath = None):
             if ipath == None:
                 if i.name.lower() in CATEGORIES.keys():
                     continue
-            
+
             folders.append(i.name)
         
         elif i.is_file():
