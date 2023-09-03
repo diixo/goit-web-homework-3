@@ -202,8 +202,8 @@ def main():
     # stop with blocking current thread before shutdown, but waits for all threads will be finished
     executor.shutdown(wait=True)
 
-    moveStatistic()
     rm_directory(root)
+    moveStatistic()
 
     return "Ok"
 ###############################################################
