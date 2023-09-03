@@ -78,11 +78,10 @@ def parse_folder(root, ipath = None):
             # if success:
             # # for any category:
             newName = normalize(pathFile.stem)
-            #print(newName)
 
             # prepare target folder for category
             targetDir = Path(root + "/" + cat)
-            #print(targetDir.absolute())
+
             if not targetDir.exists():
                 targetDir.mkdir()
 
