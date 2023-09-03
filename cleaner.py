@@ -14,11 +14,11 @@ category_files = dict()
 category_exts  = dict()
 
 ##########################################################
-img_f = {'.jpeg', '.png', '.jpg', '.svg', ".bmp", ".ico"}
-mov_f = {'.avi', '.mp4', '.mov', '.mkv', ".webm", ".wmv", ".flv"}
-doc_f = {'.doc', '.docx', '.txt', '.pdf', '.xlsx', '.pptx', ".ini", ".cmd", ".ppt", ".xml", ".msg", ".cpp", ".hpp", ".py", ".md", ".csv"}
-mus_f = {'.mp3', '.ogg', '.wav', '.amr', ".aiff"}
-arch_f = {'.zip', '.tar'}
+img_f = {".jpeg", ".png", ".jpg", ".svg", ".bmp", ".ico"}
+mov_f = {".avi", ".mp4", ".mov", ".mkv", ".webm", ".wmv", ".flv"}
+doc_f = {".doc", ".docx", ".txt", ".pdf", ".xlsx", ".pptx", ".ini", ".cmd", ".ppt", ".xml", ".msg", ".cpp", ".hpp", ".py", ".md", ".csv"}
+mus_f = {".mp3", ".ogg", ".wav", ".amr", ".aiff"}
+arch_f = {".zip", ".tar"}
 
 ##########################################################
 CYRILLIC_SYMBOLS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяєіїґ"
@@ -149,36 +149,6 @@ def rm_directory(root, ipath = None):
             logging.debug(f"RMDIR: {rmDir.absolute()}")
 
     return len(folders) == 0
-
-#############################################################
-def allStatistic(root: str):
-    global CATEGORIES
-    cat_files_all = dict()
-
-    # try to traverse each directory-category:
-    for cat, exts in CATEGORIES.items():
-        dirCat = Path(root + "/" + cat)
-
-        if dirCat.exists():
-            ext = set()                     # known extentions
-            uext = set()                    # unknown extentions
-            for item in dirCat.iterdir():
-                if(item.is_file()):
-                    print(f"[{cat}]: {item.name}")
-                    cat_files_all[cat] = cat_files_all.get(cat, 0) + 1
-
-                    if item.suffix in CATEGORIES[cat]:
-                        ext.add(item.suffix)
-                    else:
-                        uext.add(item.suffix)
-            
-            # category [others] has empty extentions dictionary
-            if len(CATEGORIES[cat]) > 0:    # check, if category is any category, except [others]
-                if len(ext)>0: print(f"[*{cat}*].extentions: {ext}")
-            else:                           # [others] category
-                if len(uext)>0: print(f"[*{cat}*].extentions: {uext}")
-
-    if cat_files_all: print("----------------------\n", cat_files_all)
 
 ###############################################################
 def main():
