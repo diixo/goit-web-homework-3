@@ -103,7 +103,7 @@ def parse_directory(root, ipath = None):
             suffix = pathFile.suffix.lower()
             cat, success = getCategory(suffix)
             # if success:
-            # # for any category:
+            # for any category:
             newName = normalize(pathFile.stem)
 
             # prepare target folder for category
