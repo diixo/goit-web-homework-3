@@ -1,7 +1,6 @@
 
 import sys
 from datetime import datetime
-from datetime import timedelta
 
 def calculate(num):
    lst = []
@@ -11,9 +10,8 @@ def calculate(num):
    return lst
 
 def factorize(*numbers):
-   #result = tuple([] for _ in range(sz))
-   #tuple([[] for _ in range(list_length)])
-   #result = ([],)*sz
+   # result = tuple([] for _ in range(sz))
+   # result = ([],)*sz
 
    sz = len(numbers)
    result = []
@@ -26,12 +24,10 @@ def factorize(*numbers):
 
 if __name__ == "__main__":
    t0 = datetime.now()
-   print(t0)
 
-   a, b, c, d  = factorize(128, 255, 99999, 10651060)
+   a, b, c, d = factorize(128, 255, 99999, 10651060)
 
    t1 = datetime.now()
-   print(t1)
    delta = t1-t0
    print(f"duration={int(delta.total_seconds() * 1000)} miliseconds") 
 
