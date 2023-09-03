@@ -97,7 +97,6 @@ def parse_folder(root, ipath = None):
                     continue
             
             folders.append(i.name)
-            empties = False
         
         elif i.is_file():
             pathFile = Path(absPath + i.name)
