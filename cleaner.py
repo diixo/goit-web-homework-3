@@ -115,7 +115,7 @@ def parse_folder(root, ipath = None):
 
             targetFile = Path(root + "/" + cat + "/" + newName + suffix)
             if targetFile.exists():
-                targetFile = targetFile.with_name(f"{targetFile.stem}-{uuid.uuid4()}{targetFile.suffix}")
+                targetFile = targetFile.with_name(f"{targetFile.stem}-{uuid.uuid4()}{suffix}")
 
             #move-copy file to destination category-directory in separated Thread:
             #pathFile.replace(targetFile)
