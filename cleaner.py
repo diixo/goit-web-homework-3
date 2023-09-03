@@ -96,7 +96,7 @@ def parse_directory(root, ipath = None):
                 if i.name.lower() in CATEGORIES.keys():
                     continue
 
-            folders.append(i.name)
+            parse_directory(root, absPath + i.name)
         
         elif i.is_file():
             pathFile = Path(absPath + i.name)
@@ -123,10 +123,6 @@ def parse_directory(root, ipath = None):
             if cat == "archives":
                 #unpack file in separated Thread
                 executor.submit(job_unpack_archive, str(targetFile.absolute()), root + "/" + cat + "/" + targetFile.stem)
-
-    #*********************************
-    for i, dirName in enumerate(folders):
-        parse_directory(root, absPath + dirName)
 
 #############################################################
 def rm_directory(root, ipath = None):
