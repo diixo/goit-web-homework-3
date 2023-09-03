@@ -117,7 +117,6 @@ def parse_directory(root, ipath = None):
                 targetFile = targetFile.with_name(f"{targetFile.stem}-{uuid.uuid4()}{suffix}")
 
             #move-copy file to destination category-directory in separated Thread:
-            #pathFile.replace(targetFile)
             executor.submit(job_copy_file, str(pathFile.absolute()), str(targetFile.absolute()), cat, suffix)
 
             if cat == "archives":
@@ -145,7 +144,7 @@ def rm_directory(root, ipath = None):
     #*********************************
     for i, dirName in enumerate(folders):
         if rm_directory(root, absPath + dirName) == True:
-            # remove sub-directory if empty is OK
+            # remove sub-directory if is empty
             rmDir = Path(absPath + dirName)
             logging.debug(f"RMDIR: {rmDir.absolute()}")
 
