@@ -29,11 +29,11 @@ for c, t in zip(CYRILLIC_SYMBOLS, TRANSLATION):
     TRANS[ord(c.upper())] = t.upper()
 
 ###########################################################
-def getCategory(pathFile):              # (string fileName)
+def getCategory(suffix: str):
     for cat, exts in CATEGORIES.items():
-        if pathFile.suffix.lower() in exts:
-            return cat, True            #(string, Bool)
-    return "others", False               #(string, Bool)
+        if suffix in exts:
+            return cat, True
+    return "others", False
 
 ###########################################################
 def normalize(name):
@@ -41,7 +41,7 @@ def normalize(name):
     rename = re.sub(r'[^a-zA-Z0-9 -]', "_", rename)
     return rename
 ###########################################################
-def job_copy_file(file_src: str, file_dest: str):
+def job_copy_file(file_src: str, file_dest: str, category: str, suffix: str):
     #pathFile.replace(targetFile)
     #shutil.copyfile(file_src, file_dest)
     logging.debug(f"COPY: from# {file_src} to# {file_dest}")
@@ -73,7 +73,8 @@ def parse_folder(root, ipath = None):
         
         elif i.is_file():
             pathFile = Path(absPath + i.name)
-            cat, success = getCategory(pathFile)  #(string, Bool)
+            suffix = pathFile.suffix.lower()
+            cat, success = getCategory(suffix)
             # if success:
             # # for any category:
             newName = normalize(pathFile.stem)
@@ -85,13 +86,13 @@ def parse_folder(root, ipath = None):
             if not targetDir.exists():
                 targetDir.mkdir()
 
-            targetFile = Path(root + "/" + cat + "/" + newName + pathFile.suffix)
+            targetFile = Path(root + "/" + cat + "/" + newName + suffix)
             if targetFile.exists():
                 targetFile = targetFile.with_name(f"{targetFile.stem}-{uuid.uuid4()}{targetFile.suffix}")
 
             #move-copy file to destination category-directory in separated Thread:
             #pathFile.replace(targetFile)
-            executor.submit(job_copy_file, str(pathFile.absolute()), str(targetFile.absolute()))
+            executor.submit(job_copy_file, str(pathFile.absolute()), str(targetFile.absolute()), cat, suffix)
 
             if cat == "archives":
                 #unpack file in separated Thread
@@ -118,7 +119,7 @@ def parse_folder(root, ipath = None):
 #############################################################
 def printStatistic(root: str):
     global CATEGORIES
-    cat_amount = dict()                     # cat_amount[category] = files-count
+    cat_amount = dict()
 
     # try to traverse each directory-category:
     for cat, exts in CATEGORIES.items():
@@ -158,7 +159,12 @@ def main():
         return f"Folder with path {root} doesn`t exists."
 
     parse_folder(root)
+
+    # stop with blocking current thread before shutdown, but waits for all threads will be finished
+    executor.shutdown(wait=True)
+
     printStatistic(root)
+
     return "Ok"
 ###############################################################
 if __name__ == "__main__":
