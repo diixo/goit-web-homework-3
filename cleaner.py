@@ -6,7 +6,7 @@ import sys
 import uuid
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
-from threading import RLock
+from threading import RLock, Thread
 import logging
 
 executor = ThreadPoolExecutor(max_workers=2)
@@ -197,7 +197,12 @@ def main():
     # stop with blocking current thread before shutdown, but waits for all threads will be finished
     executor.shutdown(wait=True)
 
-    rm_directory(root)
+    # start to remove all sub-directories in separated thread
+    thread = Thread(target=rm_directory, args=(root,))
+    thread.start()
+    thread.join()
+
+    # выводим статистику перемещения всех файлов по категориям, которые были перемещены последним вызовом приложения
     moveStatistic()
 
     return "Ok"
