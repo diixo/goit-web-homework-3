@@ -2,7 +2,7 @@
 from multiprocessing import Pool, current_process, cpu_count
 import time
 
-arr = []
+ARR_LIST = []
 
 def calculate(num):
    name = current_process().name
@@ -16,8 +16,8 @@ def calculate(num):
 
 
 def callback(result):
-   global arr
-   arr.append(result)
+   global ARR_LIST
+   ARR_LIST.append(result)
    #print(result)
 
 
@@ -30,7 +30,7 @@ def factorize(*numbers):
       pool.join()       # дочекатися закінчення всіх процесів
 
    print(f"End_factorize << {current_process().name}")
-   return tuple(list(_) for _ in arr)
+   return tuple(lst for lst in ARR_LIST)
 
 ############################################################################################
 if __name__ == "__main__":
