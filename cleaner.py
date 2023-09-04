@@ -59,7 +59,7 @@ def moveStatistic():
             print(f"[{cat}]: {amount}")
         print("="*50)
 
-def job_copy_file(file_src: str, file_dest: str, category: str, suffix: str):
+def job_move_file(file_src: str, file_dest: str, category: str, suffix: str):
     #pathFile.replace(targetFile)
     #shutil.copyfile(file_src, file_dest)
 
@@ -117,7 +117,7 @@ def parse_directory(root, ipath = None):
                 targetFile = targetFile.with_name(f"{targetFile.stem}-{uuid.uuid4()}{suffix}")
 
             #move-copy file to destination category-directory in separated Thread:
-            executor.submit(job_copy_file, str(pathFile.absolute()), str(targetFile.absolute()), cat, suffix)
+            executor.submit(job_move_file, str(pathFile.absolute()), str(targetFile.absolute()), cat, suffix)
 
             if cat == "archives":
                 #unpack file in separated Thread
