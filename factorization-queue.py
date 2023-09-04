@@ -10,27 +10,35 @@ logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
 
 
-def calculate(num: int):
-   result = []
-
-   for i in range(1, num + 1):
-      if num % i == 0:
-         result.append(i)
-   return result
+def calculate(q_in: Queue, q_out: Queue):
+   while not q_in.empty():
+      lst = []
+      num = q_in.get()
+      for i in range(1, num + 1):
+         if num % i == 0:
+            lst.append(i)
+      q_out.put(lst)
+   return None
 
 
 def factorize(*numbers):
    sz = len(numbers)
 
+   queue_in = Queue()
+   queue_out = Queue()
+   _ = [queue_in.put_nowait(v) for v in numbers]
+
    processes = []
    for i in range(sz):
-      pr = Process(target=calculate, args=(numbers[i],))
+      pr = Process(target=calculate, args=(queue_in, queue_out,))
       pr.start()
       processes.append(pr)
 
    [pr.join() for pr in processes]
+   queue_out.put(None)
 
-   return tuple()
+   #return tuple(item for item in iter(queue_out.get, None))
+   return tuple(list(iter(queue_out.get, None)))
 
 
 if __name__ == "__main__":
@@ -39,11 +47,9 @@ if __name__ == "__main__":
 
    a, b, c, d = factorize(128, 255, 99999, 10651060)
 
-   exit(0)
-
    finish = time.perf_counter()
 
-   print(a, b, c, d)
+   print(f"{a}\n{b}\n{c}\n{d}")
 
    assert a == [1, 2, 4, 8, 16, 32, 64, 128]
    assert b == [1, 3, 5, 15, 17, 51, 85, 255]
