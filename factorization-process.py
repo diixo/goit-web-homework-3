@@ -1,32 +1,47 @@
 
-import sys
-from datetime import datetime
+from multiprocessing import Process, current_process, RLock, Value, Array
+from ctypes import c_int
+import logging
+from array import array
 
-def calculate(num):
-   lst = []
-   for i in range(1, num + 1):
-      if num % i == 0:
-         lst.append(i)
-   return lst
+logger = logging.getLogger()
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
+calc_array = []
 
-def factorize(*numbers):
-   sz = len(numbers)
+def calculate(num: int, lock: RLock, lst: list):
+   global calc_array
    result = []
 
-   for i in range(sz):
-      lst = calculate(numbers[i])
-      result.append(lst)
+   for i in range(1, num + 1):
+      if num % i == 0:
+         result.append(i)
+   
+   with lock:
+      lst.append(result)
+   print(f"pid={current_process().pid}, {num:} {result}")
 
-   return tuple(result)
+def factorize(*numbers):
+   global calc_array
+   sz = len(numbers)
+
+   lock = RLock()
+
+   processes = []
+   for i in range(sz):
+      pr = Process(target=calculate, args=(numbers[i], lock))
+      pr.start()
+      processes.append(pr)
+
+   [pr.join() for pr in processes]
+
+   return tuple(arr for arr in calc_array)
 
 if __name__ == "__main__":
-   t0 = datetime.now()
 
    a, b, c, d = factorize(128, 255, 99999, 10651060)
 
-   t1 = datetime.now()
-   delta = t1-t0
-   print(f"duration={int(delta.total_seconds() * 1000)} miliseconds") 
+   exit(0)
 
    assert a == [1, 2, 4, 8, 16, 32, 64, 128]
    assert b == [1, 3, 5, 15, 17, 51, 85, 255]
