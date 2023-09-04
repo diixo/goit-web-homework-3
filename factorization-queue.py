@@ -35,10 +35,10 @@ def factorize(*numbers):
       processes.append(pr)
 
    [pr.join() for pr in processes]
-   queue_out.put(None)
+   queue_out.put(None)  # add last element=None as marker
 
-   #return tuple(item for item in iter(queue_out.get, None))
-   return tuple(list(iter(queue_out.get, None)))
+   return tuple(item for item in iter(queue_out.get, None))
+   #return tuple(list(iter(queue_out.get, None)))
 
 
 if __name__ == "__main__":
