@@ -1,8 +1,6 @@
-
+from concurrent.futures import ProcessPoolExecutor
 from multiprocessing import Pool, current_process, cpu_count
 import time
-
-ARR_LIST = []
 
 def calculate(num):
    name = current_process().name
@@ -14,26 +12,16 @@ def calculate(num):
    #print(f"calculate_{name} <<")
    return lst
 
-
-def callback(result):
-   global ARR_LIST
-   ARR_LIST.append(result)
-   #print(result)
-
-
 def factorize(*numbers):
-   with Pool(cpu_count()) as pool:
-      for num in numbers:
-         pool.apply_async(calculate, args=(num, ), callback=callback)
-      pool.close()      # перестати виділяти процеси в пулл
-      # p.terminate()   # убити всіх
-      pool.join()       # дочекатися закінчення всіх процесів
+   result = []
+   with ProcessPoolExecutor(cpu_count()) as executor:
+      for num, lst in zip(numbers, executor.map(calculate, numbers)):
+         result.append(lst)
 
-   #print(f"End_factorize << {current_process().name}")
-   return tuple(lst for lst in ARR_LIST)
+   return tuple(result)
 
-############################################################################################
-if __name__ == "__main__":
+
+if __name__ == '__main__':
    print(f"Count CPU: {cpu_count()}")
    start = time.perf_counter()
 
